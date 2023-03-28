@@ -93,10 +93,10 @@ impl<'a> Scanner<'a> {
                                         self.source.next();
                                         break;
                                     }
-                                },
+                                }
                                 '\n' => {
                                     self.line += 1;
-                                },
+                                }
                                 _ => {}
                             }
                         }
@@ -193,26 +193,23 @@ impl<'a> Scanner<'a> {
             }
         }
         if let Some(c) = self.source.peek() {
-            match c {
-                '.' => {
-                    // consume the period
-                    // since we can't peek twice, we need to consume the period and either
-                    // make a token for it (if the next character after the period is not a number)
-                    // or add the period as part of the number
-                    self.source.next();
+            if c == &'.' {
+                // consume the period
+                // since we can't peek twice, we need to consume the period and either
+                // make a token for it (if the next character after the period is not a number)
+                // or add the period as part of the number
+                self.source.next();
 
-                    if let Some('0'..='9') = self.source.peek() {
-                        number.push('.');
-                    } else {
-                        let token = Token {
-                            lexeme: ".".to_string(),
-                            line: current_line,
-                            token_type: TokenType::Period,
-                        };
-                        tokens.push_back(token);
-                    }
+                if let Some('0'..='9') = self.source.peek() {
+                    number.push('.');
+                } else {
+                    let token = Token {
+                        lexeme: ".".to_string(),
+                        line: current_line,
+                        token_type: TokenType::Period,
+                    };
+                    tokens.push_back(token);
                 }
-                _ => {}
             }
         }
 

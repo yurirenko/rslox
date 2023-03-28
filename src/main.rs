@@ -1,10 +1,11 @@
 mod expression;
-mod token;
+mod parser;
 mod scanner;
+mod token;
 
+use crate::scanner::Scanner;
 use std::io::{stdin, stdout, BufRead, Write};
 use std::{env, error, fs, process};
-use crate::scanner::Scanner;
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -54,7 +55,6 @@ fn run_prompt() -> Result<(), Box<dyn error::Error>> {
 }
 
 fn run(program_contents: &str) {
-    let tokens = Scanner::init(&program_contents)
-        .scan_tokens();
+    let tokens = Scanner::init(program_contents).scan_tokens();
     println!("Tokens: {:?}", tokens);
 }

@@ -1,9 +1,10 @@
-use crate::token::{Token};
+use crate::token::Token;
+#[cfg(test)]
+use crate::token::TokenType;
 #[cfg(test)]
 use pretty_assertions::assert_eq;
-#[cfg(test)]
-use crate::token::{TokenType};
 
+#[derive(Debug, PartialEq)]
 pub enum LiteralValue {
     Boolean(bool),
     Nil,
@@ -11,6 +12,7 @@ pub enum LiteralValue {
     String(String),
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Expr {
     Binary(Box<Expr>, Token, Box<Expr>),
     Grouping(Box<Expr>),
