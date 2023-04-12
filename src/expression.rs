@@ -4,7 +4,7 @@ use crate::token::TokenType;
 #[cfg(test)]
 use pretty_assertions::assert_eq;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum LiteralValue {
     Boolean(bool),
     Nil,
@@ -20,7 +20,7 @@ pub enum Expr {
     Unary(Token, Box<Expr>),
 }
 
-trait Visitor<R> {
+pub trait Visitor<R> {
     fn visit_binary_expression(&self, left: &Expr, operator: &Token, right: &Expr) -> R;
     fn visit_grouping_expression(&self, expr: &Expr) -> R;
     fn visit_literal_expression(&self, value: &LiteralValue) -> R;

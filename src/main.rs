@@ -2,10 +2,14 @@ mod expression;
 mod parser;
 mod scanner;
 mod token;
+mod interpreter;
 
 use crate::scanner::Scanner;
 use std::io::{stdin, stdout, BufRead, Write};
 use std::{env, error, fs, process};
+use crate::expression::Visitor;
+use crate::interpreter::Interpreter;
+use crate::parser::Parser;
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -56,5 +60,13 @@ fn run_prompt() -> Result<(), Box<dyn error::Error>> {
 
 fn run(program_contents: &str) {
     let tokens = Scanner::init(program_contents).scan_tokens();
+    let mut parser = Parser::init(&tokens);
+    let expression = parser.parse();
+
+    let interpreter = Interpreter {};
+    let result = interpreter.visit_expression(&expression);
+
     println!("Tokens: {:?}", tokens);
+    println!("Expression: {:?}", expression);
+    println!("Result: {:?}", result);
 }

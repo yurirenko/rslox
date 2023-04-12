@@ -92,7 +92,7 @@ impl<'a> Parser<'a> {
 
         while let Some(token) = self.tokens.peek() {
             match token.token_type {
-                TokenType::Minus | TokenType::Plus => {
+                TokenType::Slash | TokenType::Star => {
                     self.advance();
                     let op = self.prev_token.unwrap();
                     let right = self.unary();
@@ -199,6 +199,45 @@ fn test_binary() {
             token_type: TokenType::Plus,
         },
         Box::new(Expr::Literal(LiteralValue::Number(3.0))),
+    );
+
+    let mut parser = Parser::init(&tokens[..]);
+    assert_eq!(expected, parser.parse());
+}
+
+#[test]
+fn test_nested_binary() {
+    let tokens = vec![
+        Token {
+            lexeme: String::from("2"),
+            token_type: TokenType::Number(2.0),
+            line: 1,
+        },
+        Token {
+            lexeme: String::from("/"),
+            token_type: TokenType::Slash,
+            line: 1,
+        },
+        Token {
+            lexeme: String::from("2"),
+            token_type: TokenType::Number(5.0),
+            line: 1,
+        },
+        Token {
+            lexeme: String::from(""),
+            token_type: TokenType::Eof,
+            line: 2,
+        },
+    ];
+
+    let expected = Expr::Binary(
+        Box::new(Expr::Literal(LiteralValue::Number(2.0))),
+        Token {
+            lexeme: String::from("/"),
+            token_type: TokenType::Slash,
+            line: 1,
+        },
+        Box::new(Expr::Literal(LiteralValue::Number(5.0))),
     );
 
     let mut parser = Parser::init(&tokens[..]);
