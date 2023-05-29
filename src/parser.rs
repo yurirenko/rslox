@@ -1,4 +1,5 @@
 use crate::expression::{Expr, LiteralValue};
+use crate::statement::Statement;
 use crate::token::{Token, TokenType};
 use std::iter::Peekable;
 use std::slice::Iter;
@@ -16,8 +17,65 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse(&mut self) -> Expr {
-        self.expression()
+    pub fn parse(&mut self) -> Vec<Statement> {
+        let mut statements = Vec::new();
+        while !self.at_end() {
+            statements.push(self.statement());
+        }
+
+        statements
+    }
+
+    fn at_end(&mut self) -> bool {
+        if let Some(token) = self.tokens.peek() {
+            token.token_type == TokenType::Eof
+        } else {
+            true
+        }
+    }
+
+    fn statement(&mut self) -> Statement {
+        if let Some(token) = self.tokens.peek() {
+            match token.token_type {
+                TokenType::Print => {
+                    self.advance();
+                    let expr = self.expression();
+
+                    if let Some(token) = self.tokens.peek() {
+                        match token.token_type {
+                            TokenType::Semicolon => {
+                                self.advance();
+                                Statement::Print(expr)
+                            }
+                            _ => {
+                                panic!("Missing semicolon on line {}!", token.line);
+                            }
+                        }
+                    } else {
+                        panic!("Missing expression!");
+                    }
+                }
+                _ => {
+                    let expr = self.expression();
+
+                    if let Some(token) = self.tokens.peek() {
+                        match token.token_type {
+                            TokenType::Semicolon => {
+                                self.advance();
+                                Statement::Expression(expr)
+                            }
+                            _ => {
+                                panic!("Missing semicolon on line {}!", token.line);
+                            }
+                        }
+                    } else {
+                        panic!("Missing expression!");
+                    }
+                }
+            }
+        } else {
+            panic!("Internal error");
+        }
     }
 
     fn expression(&mut self) -> Expr {
@@ -120,7 +178,8 @@ impl<'a> Parser<'a> {
     }
 
     fn primary(&mut self) -> Expr {
-        match &self.tokens.peek().unwrap().token_type {
+        let token = self.tokens.peek().unwrap();
+        match &token.token_type {
             TokenType::False => {
                 self.advance();
                 Expr::Literal(LiteralValue::Boolean(false))
@@ -135,7 +194,7 @@ impl<'a> Parser<'a> {
             }
             TokenType::Number(n) => {
                 self.advance();
-                Expr::Literal(LiteralValue::Number(*n))
+                Expr::Literal(LiteralValue::Number(n.clone()))
             }
             TokenType::StringLiteral(s) => {
                 self.advance();
@@ -158,9 +217,9 @@ impl<'a> Parser<'a> {
                 } else {
                     panic!("Missing closing parenthesis!");
                 }
-            }
-            _ => {
-                panic!("Syntax error!");
+            },
+            token_type => {
+                panic!("Syntax error! Encountered token: {:?} at line: {}", token_type, token.line);
             }
         }
     }
@@ -190,8 +249,13 @@ fn test_binary() {
             lexeme: String::from("3.0"),
             token_type: TokenType::Number(3.0),
         },
+        Token {
+            line: 1,
+            lexeme: String::from(";"),
+            token_type: TokenType::Semicolon,
+        },
     ];
-    let expected = Expr::Binary(
+    let expected = vec![Statement::Expression(Expr::Binary(
         Box::new(Expr::Literal(LiteralValue::Number(2.0))),
         Token {
             line: 1,
@@ -199,7 +263,7 @@ fn test_binary() {
             token_type: TokenType::Plus,
         },
         Box::new(Expr::Literal(LiteralValue::Number(3.0))),
-    );
+    ))];
 
     let mut parser = Parser::init(&tokens[..]);
     assert_eq!(expected, parser.parse());
@@ -224,13 +288,18 @@ fn test_nested_binary() {
             line: 1,
         },
         Token {
+            lexeme: String::from(";"),
+            token_type: TokenType::Semicolon,
+            line: 1,
+        },
+        Token {
             lexeme: String::from(""),
             token_type: TokenType::Eof,
             line: 2,
         },
     ];
 
-    let expected = Expr::Binary(
+    let expected = vec![Statement::Expression(Expr::Binary(
         Box::new(Expr::Literal(LiteralValue::Number(2.0))),
         Token {
             lexeme: String::from("/"),
@@ -238,7 +307,7 @@ fn test_nested_binary() {
             line: 1,
         },
         Box::new(Expr::Literal(LiteralValue::Number(5.0))),
-    );
+    ))];
 
     let mut parser = Parser::init(&tokens[..]);
     assert_eq!(expected, parser.parse());
@@ -257,16 +326,21 @@ fn test_unary() {
             lexeme: String::from("10.0"),
             token_type: TokenType::Number(10.0),
         },
+        Token {
+            line: 1,
+            lexeme: String::from(";"),
+            token_type: TokenType::Semicolon,
+        },
     ];
 
-    let expected = Expr::Unary(
+    let expected = vec![Statement::Expression(Expr::Unary(
         Token {
             line: 1,
             lexeme: String::from("-"),
             token_type: TokenType::Minus,
         },
         Box::new(Expr::Literal(LiteralValue::Number(10.0))),
-    );
+    ))];
 
     let mut parser = Parser::init(&tokens[..]);
     assert_eq!(expected, parser.parse());
@@ -290,9 +364,14 @@ fn test_nested_unary() {
             lexeme: String::from("10.0"),
             token_type: TokenType::Number(10.0),
         },
+        Token {
+            line: 1,
+            lexeme: String::from(";"),
+            token_type: TokenType::Semicolon,
+        },
     ];
 
-    let expected = Expr::Unary(
+    let expected = vec![Statement::Expression(Expr::Unary(
         Token {
             line: 1,
             lexeme: String::from("-"),
@@ -306,7 +385,7 @@ fn test_nested_unary() {
             },
             Box::new(Expr::Literal(LiteralValue::Number(10.0))),
         )),
-    );
+    ))];
 
     let mut parser = Parser::init(&tokens[..]);
     assert_eq!(expected, parser.parse());

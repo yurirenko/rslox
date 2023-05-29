@@ -1,4 +1,5 @@
 use crate::expression::{Expr, LiteralValue, Visitor};
+use crate::statement::Statement;
 use crate::token::{Token, TokenType};
 
 pub struct Interpreter;
@@ -95,6 +96,26 @@ impl Visitor<LiteralValue> for Interpreter {
             Expr::Unary(operator, expr) => {
                 self.visit_unary_expression(operator, expr)
             }
+        }
+    }
+
+    fn visit_statement(&self, statement: &Statement) {
+        match statement {
+            Statement::Expression(expr) => {
+                self.visit_expression(expr);
+            },
+            Statement::Print(expr) => {
+                let val = self.visit_expression(expr);
+                println!("{val}");
+            }
+        }
+    }
+}
+
+impl Interpreter {
+    pub fn interpret(&self, statements: Vec<Statement>) {
+        for statement in statements {
+            self.visit_statement(&statement);
         }
     }
 }

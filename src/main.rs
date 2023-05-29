@@ -3,6 +3,7 @@ mod parser;
 mod scanner;
 mod token;
 mod interpreter;
+mod statement;
 
 use crate::scanner::Scanner;
 use std::io::{stdin, stdout, BufRead, Write};
@@ -61,12 +62,11 @@ fn run_prompt() -> Result<(), Box<dyn error::Error>> {
 fn run(program_contents: &str) {
     let tokens = Scanner::init(program_contents).scan_tokens();
     let mut parser = Parser::init(&tokens);
-    let expression = parser.parse();
-
-    let interpreter = Interpreter {};
-    let result = interpreter.visit_expression(&expression);
+    let statements = parser.parse();
 
     println!("Tokens: {:?}", tokens);
-    println!("Expression: {:?}", expression);
-    println!("Result: {:?}", result);
+    println!("Statements: {:?}", statements);
+
+    let interpreter = Interpreter {};
+    interpreter.interpret(statements);
 }

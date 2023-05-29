@@ -1,8 +1,11 @@
+use std::fmt;
+use std::fmt::Formatter;
 use crate::token::Token;
 #[cfg(test)]
 use crate::token::TokenType;
 #[cfg(test)]
 use pretty_assertions::assert_eq;
+use crate::statement::Statement;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum LiteralValue {
@@ -10,6 +13,25 @@ pub enum LiteralValue {
     Nil,
     Number(f64),
     String(String),
+}
+
+impl fmt::Display for LiteralValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            LiteralValue::Boolean(value) => {
+                write!(f, "{value}")
+            },
+            LiteralValue::Nil => {
+                write!(f, "nil")
+            },
+            LiteralValue::Number(value) => {
+                write!(f, "{value}")
+            },
+            LiteralValue::String(value) => {
+                write!(f, "{value}")
+            }
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -26,6 +48,7 @@ pub trait Visitor<R> {
     fn visit_literal_expression(&self, value: &LiteralValue) -> R;
     fn visit_unary_expression(&self, operator: &Token, expr: &Expr) -> R;
     fn visit_expression(&self, expr: &Expr) -> R;
+    fn visit_statement(&self, statement: &Statement);
 }
 
 pub struct AstPrinter;
@@ -81,6 +104,17 @@ impl Visitor<String> for AstPrinter {
             Expr::Unary(operator, expr) => self.visit_unary_expression(operator, expr),
             Expr::Grouping(expr) => self.visit_grouping_expression(expr),
             Expr::Literal(value) => self.visit_literal_expression(value),
+        }
+    }
+
+    fn visit_statement(&self, statement: &Statement) {
+        match statement {
+            Statement::Expression(expr) => {
+                self.visit_expression(expr);
+            },
+            Statement::Print(expr) => {
+                self.parenthesize("print", vec![expr]);
+            }
         }
     }
 }
