@@ -1,16 +1,16 @@
 mod expression;
+mod interpreter;
 mod parser;
 mod scanner;
-mod token;
-mod interpreter;
 mod statement;
+mod token;
 
-use crate::scanner::Scanner;
-use std::io::{stdin, stdout, BufRead, Write};
-use std::{env, error, fs, process};
 use crate::expression::Visitor;
 use crate::interpreter::Interpreter;
 use crate::parser::Parser;
+use crate::scanner::Scanner;
+use std::io::{stdin, stdout, BufRead, Write};
+use std::{env, error, fs, process};
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -22,11 +22,9 @@ fn main() {
             println!("Execution failed! {}", err);
             process::exit(1);
         }
-    } else {
-        if let Err(err) = run_prompt() {
-            println!("Execution failed! {}", err);
-            process::exit(1);
-        }
+    } else if let Err(err) = run_prompt() {
+        println!("Execution failed! {}", err);
+        process::exit(1);
     }
 }
 

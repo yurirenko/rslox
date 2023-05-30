@@ -1,11 +1,12 @@
-use std::fmt;
-use std::fmt::Formatter;
+use crate::statement::Statement;
 use crate::token::Token;
 #[cfg(test)]
 use crate::token::TokenType;
 #[cfg(test)]
 use pretty_assertions::assert_eq;
-use crate::statement::Statement;
+use std::fmt;
+use std::fmt::Formatter;
+use colored::Colorize;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum LiteralValue {
@@ -19,16 +20,16 @@ impl fmt::Display for LiteralValue {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             LiteralValue::Boolean(value) => {
-                write!(f, "{value}")
-            },
+                write!(f, "{}", value.to_string().blue())
+            }
             LiteralValue::Nil => {
-                write!(f, "nil")
-            },
+                write!(f, "{}", "nil".red())
+            }
             LiteralValue::Number(value) => {
-                write!(f, "{value}")
-            },
+                write!(f, "{}", value.to_string().yellow())
+            }
             LiteralValue::String(value) => {
-                write!(f, "{value}")
+                write!(f, "\"{}\"", value.to_string().green())
             }
         }
     }
@@ -111,7 +112,7 @@ impl Visitor<String> for AstPrinter {
         match statement {
             Statement::Expression(expr) => {
                 self.visit_expression(expr);
-            },
+            }
             Statement::Print(expr) => {
                 self.parenthesize("print", vec![expr]);
             }
