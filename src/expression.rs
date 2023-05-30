@@ -2,11 +2,11 @@ use crate::statement::Statement;
 use crate::token::Token;
 #[cfg(test)]
 use crate::token::TokenType;
+use colored::Colorize;
 #[cfg(test)]
 use pretty_assertions::assert_eq;
 use std::fmt;
 use std::fmt::Formatter;
-use colored::Colorize;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum LiteralValue {
@@ -41,6 +41,8 @@ pub enum Expr {
     Grouping(Box<Expr>),
     Literal(LiteralValue),
     Unary(Token, Box<Expr>),
+    // for accessing the variable, not defining it!
+    Variable(Token),
 }
 
 pub trait Visitor<R> {
@@ -49,7 +51,10 @@ pub trait Visitor<R> {
     fn visit_literal_expression(&self, value: &LiteralValue) -> R;
     fn visit_unary_expression(&self, operator: &Token, expr: &Expr) -> R;
     fn visit_expression(&self, expr: &Expr) -> R;
+    fn visit_variable_expression(&self, expr: &Expr) -> R;
+
     fn visit_statement(&self, statement: &Statement);
+    fn visit_var_statement(&self, statement: &Statement);
 }
 
 pub struct AstPrinter;
@@ -97,6 +102,14 @@ impl Visitor<String> for AstPrinter {
         self.parenthesize(operator.lexeme.as_str(), vec![expr])
     }
 
+    fn visit_variable_expression(&self, expr: &Expr) -> String {
+        self.parenthesize("var", vec![expr])
+    }
+
+    fn visit_var_statement(&self, statement: &Statement) {
+        todo!()
+    }
+
     fn visit_expression(&self, e: &Expr) -> String {
         match e {
             Expr::Binary(left, operator, right) => {
@@ -105,6 +118,7 @@ impl Visitor<String> for AstPrinter {
             Expr::Unary(operator, expr) => self.visit_unary_expression(operator, expr),
             Expr::Grouping(expr) => self.visit_grouping_expression(expr),
             Expr::Literal(value) => self.visit_literal_expression(value),
+            Expr::Variable(_) => self.visit_variable_expression(e),
         }
     }
 
@@ -115,6 +129,9 @@ impl Visitor<String> for AstPrinter {
             }
             Statement::Print(expr) => {
                 self.parenthesize("print", vec![expr]);
+            },
+            _ => {
+                todo!();
             }
         }
     }

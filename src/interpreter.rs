@@ -95,8 +95,15 @@ impl Visitor<LiteralValue> for Interpreter {
             }
             Expr::Unary(operator, expr) => {
                 self.visit_unary_expression(operator, expr)
+            },
+            _ => {
+                todo!();
             }
         }
+    }
+
+    fn visit_variable_expression(&self, expr: &Expr) -> LiteralValue {
+        todo!()
     }
 
     fn visit_statement(&self, statement: &Statement) {
@@ -107,8 +114,15 @@ impl Visitor<LiteralValue> for Interpreter {
             Statement::Print(expr) => {
                 let val = self.visit_expression(expr);
                 println!("{val}");
+            },
+            _ => {
+                todo!();
             }
         }
+    }
+
+    fn visit_var_statement(&self, statement: &Statement) {
+        todo!()
     }
 }
 

@@ -177,7 +177,7 @@ impl<'a> Scanner<'a> {
 
         self.make_token(
             token.clone(),
-            TokenType::make_keyword(token.as_str()).unwrap_or_else(|| TokenType::Identifier(token)),
+            TokenType::make_keyword(token.as_str()).unwrap_or(TokenType::Identifier(token)),
         )
     }
 

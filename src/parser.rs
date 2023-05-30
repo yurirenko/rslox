@@ -20,7 +20,7 @@ impl<'a> Parser<'a> {
     pub fn parse(&mut self) -> Vec<Statement> {
         let mut statements = Vec::new();
         while !self.at_end() {
-            statements.push(self.statement());
+            statements.push(self.declaration());
         }
 
         statements
@@ -31,6 +31,47 @@ impl<'a> Parser<'a> {
             token.token_type == TokenType::Eof
         } else {
             true
+        }
+    }
+
+    fn declaration(&mut self) -> Statement {
+        if let Some(token) = self.tokens.peek() {
+            match token.token_type {
+                TokenType::Var => {
+                    self.advance();
+                    self.var_declaration()
+                }
+                _ => self.statement(),
+            }
+        } else {
+            panic!("Internal error");
+        }
+    }
+
+    fn var_declaration(&mut self) -> Statement {
+        let token = *self.tokens.peek().unwrap();
+
+        match token.token_type {
+            TokenType::Identifier(_) => {
+                self.advance();
+
+                let next_token = self.tokens.peek().unwrap();
+                let mut initializer = None;
+                if next_token.token_type == TokenType::Equal {
+                    self.advance();
+                    initializer = Some(self.expression());
+                }
+                let next_token = *self.tokens.peek().unwrap();
+                if next_token.token_type != TokenType::Semicolon {
+                    panic!("Missing ; after var declaration!");
+                }
+                self.advance();
+
+                Statement::Var(token.clone(), initializer)
+            }
+            _ => {
+                panic!("Expected variable name after var!");
+            }
         }
     }
 
@@ -194,7 +235,11 @@ impl<'a> Parser<'a> {
             }
             TokenType::Number(n) => {
                 self.advance();
-                Expr::Literal(LiteralValue::Number(n.clone()))
+                Expr::Literal(LiteralValue::Number(*n))
+            }
+            TokenType::Identifier(_) => {
+                self.advance();
+                Expr::Variable(self.prev_token.unwrap().clone())
             }
             TokenType::StringLiteral(s) => {
                 self.advance();
@@ -217,9 +262,12 @@ impl<'a> Parser<'a> {
                 } else {
                     panic!("Missing closing parenthesis!");
                 }
-            },
+            }
             token_type => {
-                panic!("Syntax error! Encountered token: {:?} at line: {}", token_type, token.line);
+                panic!(
+                    "Syntax error! Encountered token: {:?} at line: {}",
+                    token_type, token.line
+                );
             }
         }
     }
@@ -386,6 +434,49 @@ fn test_nested_unary() {
             Box::new(Expr::Literal(LiteralValue::Number(10.0))),
         )),
     ))];
+
+    let mut parser = Parser::init(&tokens[..]);
+    assert_eq!(expected, parser.parse());
+}
+
+#[test]
+fn test_var_declaration_with_initialization() {
+    let tokens = vec![
+        Token {
+            line: 1,
+            lexeme: String::from("var"),
+            token_type: TokenType::Var,
+        },
+        Token {
+            line: 1,
+            lexeme: String::from("greeting"),
+            token_type: TokenType::Identifier(String::from("greeting")),
+        },
+        Token {
+            line: 1,
+            lexeme: String::from("="),
+            token_type: TokenType::Equal,
+        },
+        Token {
+            line: 1,
+            lexeme: String::from("hello!"),
+            token_type: TokenType::StringLiteral(String::from("hello!")),
+        },
+        Token {
+            line: 1,
+            lexeme: String::from(";"),
+            token_type: TokenType::Semicolon,
+        },
+    ];
+
+    let expected = vec![Statement::Var(
+        Token {
+            line: 1,
+            lexeme: String::from("greeting"),
+            token_type: TokenType::Identifier(String::from("greeting")),
+        },
+        Some(Expr::Literal(LiteralValue::String(String::from("hello!")))),
+    )];
 
     let mut parser = Parser::init(&tokens[..]);
     assert_eq!(expected, parser.parse());
