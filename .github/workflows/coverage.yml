@@ -1,6 +1,6 @@
 name:                           coverage
 
-on:                             [push]
+on:                             [workflow_dispatch, push]
 jobs:
   test:
     name:                       coverage
