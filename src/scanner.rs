@@ -45,7 +45,7 @@ impl<'a> Scanner<'a> {
                     let mut lexeme = c.to_string();
                     if let Some('=') = self.source.peek() {
                         op = TokenType::BangEqual;
-                        lexeme.push_str("=");
+                        lexeme.push('=');
                         self.source.next();
                     }
                     tokens.push(self.make_token(lexeme, op));
@@ -55,7 +55,7 @@ impl<'a> Scanner<'a> {
                     let mut lexeme = c.to_string();
                     if let Some('=') = self.source.peek() {
                         op = TokenType::EqualEqual;
-                        lexeme.push_str("=");
+                        lexeme.push('=');
                         self.source.next();
                     }
                     tokens.push(self.make_token(lexeme, op));
@@ -65,7 +65,7 @@ impl<'a> Scanner<'a> {
                     let mut lexeme = c.to_string();
                     if let Some('=') = self.source.peek() {
                         op = TokenType::LessEqual;
-                        lexeme.push_str("=");
+                        lexeme.push('=');
                         self.source.next();
                     }
                     tokens.push(self.make_token(lexeme, op));
@@ -75,7 +75,7 @@ impl<'a> Scanner<'a> {
                     let mut lexeme = c.to_string();
                     if let Some('=') = self.source.peek() {
                         op = TokenType::GreaterEqual;
-                        lexeme.push_str("=");
+                        lexeme.push('=');
                         self.source.next();
                     }
                     tokens.push(self.make_token(lexeme, op));

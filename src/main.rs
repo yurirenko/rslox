@@ -4,8 +4,8 @@ mod parser;
 mod scanner;
 mod statement;
 mod token;
+mod environment;
 
-use crate::expression::Visitor;
 use crate::interpreter::Interpreter;
 use crate::parser::Parser;
 use crate::scanner::Scanner;
@@ -31,14 +31,16 @@ fn main() {
 fn run_file(path: &str) -> Result<(), Box<dyn error::Error>> {
     let file_bytes = fs::read(path)?;
     let script_contents = String::from_utf8(file_bytes)?;
+    let mut interpreter = Interpreter::new();
 
-    run(&script_contents);
+    run(&script_contents, &mut interpreter);
     Ok(())
 }
 
 fn run_prompt() -> Result<(), Box<dyn error::Error>> {
     let stdin = stdin();
     let mut line = String::new();
+    let mut interpreter = Interpreter::new();
 
     loop {
         line.clear();
@@ -53,11 +55,11 @@ fn run_prompt() -> Result<(), Box<dyn error::Error>> {
             process::exit(0);
         }
 
-        run(&line);
+        run(&line, &mut interpreter);
     }
 }
 
-fn run(program_contents: &str) {
+fn run(program_contents: &str, interpreter: &mut Interpreter) {
     let tokens = Scanner::init(program_contents).scan_tokens();
     let mut parser = Parser::init(&tokens);
     let statements = parser.parse();
@@ -65,6 +67,5 @@ fn run(program_contents: &str) {
     println!("Tokens: {:?}", tokens);
     println!("Statements: {:?}", statements);
 
-    let interpreter = Interpreter {};
     interpreter.interpret(statements);
 }
