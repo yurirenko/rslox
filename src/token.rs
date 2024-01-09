@@ -44,6 +44,7 @@ pub enum TokenType {
     This,
     True,
     Var,
+    MutVar,
     While,
     Eof,
 }

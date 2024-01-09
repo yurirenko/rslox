@@ -8,7 +8,12 @@ pub struct Interpreter {
 }
 
 impl Visitor<LiteralValue> for Interpreter {
-    fn visit_binary_expression(&mut self, left: &Expr, operator: &Token, right: &Expr) -> LiteralValue {
+    fn visit_binary_expression(
+        &mut self,
+        left: &Expr,
+        operator: &Token,
+        right: &Expr,
+    ) -> LiteralValue {
         let left_right = (self.visit_expression(left), self.visit_expression(right));
 
         match left_right {
@@ -94,6 +99,7 @@ impl Visitor<LiteralValue> for Interpreter {
             Expr::Literal(literal_value) => self.visit_literal_expression(literal_value),
             Expr::Unary(operator, expr) => self.visit_unary_expression(operator, expr),
             Expr::Variable(token) => self.visit_variable_expression(token),
+            Expr::Assignment(token, expr) => self.visit_assignment_expression(token, expr),
         }
     }
 
@@ -101,28 +107,39 @@ impl Visitor<LiteralValue> for Interpreter {
         self.environment.get(name_token)
     }
 
-    fn visit_statement(&mut self, statement: &Statement) {
+    fn visit_statement(&mut self, statement: &Statement) -> LiteralValue {
         match statement {
-            Statement::Expression(expr) => {
-                self.visit_expression(expr);
-            }
+            Statement::Expression(expr) => self.visit_expression(expr),
             Statement::Print(expr) => {
                 let val = self.visit_expression(expr);
                 println!("{val}");
+                val
             }
             Statement::Var(token, initializer) => {
-                self.visit_var_declaration_statement(token, initializer);
+                self.visit_var_declaration_statement(token, initializer)
             }
         }
     }
 
-    fn visit_var_declaration_statement(&mut self, token: &Token, initializer: &Option<Expr>) {
-        let mut value: Option<LiteralValue> = None;
+    fn visit_assignment_expression(&mut self, name_token: &Token, right: &Expr) -> LiteralValue {
+        let value = self.visit_expression(right);
+        self.environment.assign(&name_token.lexeme, value.clone());
+
+        value
+    }
+
+    fn visit_var_declaration_statement(
+        &mut self,
+        token: &Token,
+        initializer: &Option<Expr>,
+    ) -> LiteralValue {
+        let mut value = LiteralValue::Nil;
         if let Some(default_initializer) = initializer {
-            value = Some(self.visit_expression(default_initializer));
+            value = self.visit_expression(default_initializer);
         }
 
-        self.environment.define(&token.lexeme, value);
+        self.environment.define(&token.lexeme, value.clone());
+        value
     }
 }
 

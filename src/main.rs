@@ -1,10 +1,10 @@
+mod environment;
 mod expression;
 mod interpreter;
 mod parser;
 mod scanner;
 mod statement;
 mod token;
-mod environment;
 
 use crate::interpreter::Interpreter;
 use crate::parser::Parser;
@@ -63,9 +63,6 @@ fn run(program_contents: &str, interpreter: &mut Interpreter) {
     let tokens = Scanner::init(program_contents).scan_tokens();
     let mut parser = Parser::init(&tokens);
     let statements = parser.parse();
-
-    println!("Tokens: {:?}", tokens);
-    println!("Statements: {:?}", statements);
 
     interpreter.interpret(statements);
 }

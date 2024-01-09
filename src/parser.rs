@@ -120,7 +120,28 @@ impl<'a> Parser<'a> {
     }
 
     fn expression(&mut self) -> Expr {
-        self.equality()
+        self.assignment()
+    }
+
+    fn assignment(&mut self) -> Expr {
+        let mut expr = self.equality();
+
+        while let Some(token) = self.tokens.peek() {
+            match token.token_type {
+                TokenType::Equal => {
+                    self.advance();
+
+                    // let equals = self.prev_token.unwrap();
+                    let value = self.assignment();
+                    if let Expr::Variable(token) = expr {
+                        expr = Expr::Assignment(token, Box::new(value));
+                    }
+                }
+                _ => break,
+            }
+        }
+
+        expr
     }
 
     fn equality(&mut self) -> Expr {

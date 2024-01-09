@@ -33,6 +33,7 @@ impl fmt::Display for LiteralValue {
 
 #[derive(Debug, PartialEq)]
 pub enum Expr {
+    Assignment(Token, Box<Expr>),
     Binary(Box<Expr>, Token, Box<Expr>),
     Grouping(Box<Expr>),
     Literal(LiteralValue),
@@ -48,7 +49,8 @@ pub trait Visitor<R> {
     fn visit_unary_expression(&mut self, operator: &Token, expr: &Expr) -> R;
     fn visit_expression(&mut self, expr: &Expr) -> R;
     fn visit_variable_expression(&mut self, name_token: &Token) -> R;
+    fn visit_assignment_expression(&mut self, name_token: &Token, right: &Expr) -> R;
 
-    fn visit_statement(&mut self, statement: &Statement);
-    fn visit_var_declaration_statement(&mut self, token: &Token, initializer: &Option<Expr>);
+    fn visit_statement(&mut self, statement: &Statement) -> R;
+    fn visit_var_declaration_statement(&mut self, token: &Token, initializer: &Option<Expr>) -> R;
 }
