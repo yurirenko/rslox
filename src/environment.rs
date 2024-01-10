@@ -1,15 +1,16 @@
 use crate::expression::LiteralValue;
-use crate::token::Token;
 use std::collections::HashMap;
 
 pub struct Environment {
+    enclosing: Option<Box<Environment>>,
     values: HashMap<String, LiteralValue>,
 }
 
 impl Environment {
-    pub fn new() -> Self {
+    pub fn new(enclosing: Option<Box<Environment>>) -> Self {
         Self {
             values: HashMap::new(),
+            enclosing,
         }
     }
 
@@ -18,17 +19,84 @@ impl Environment {
     }
 
     pub fn assign(&mut self, name: &str, v: LiteralValue) {
-        if self.values.contains_key(name) {
-            self.values.insert(name.to_string(), v);
+        if let Some(enclosing_env) = &mut self.enclosing {
+            enclosing_env.assign(name, v);
         } else {
-            panic!("Variable {} is not defined", name);
+            if self.values.contains_key(name) {
+                self.values.insert(name.to_string(), v);
+            } else {
+                panic!("Variable {} is not defined", name);
+            }
         }
     }
 
-    pub fn get(&mut self, token: &Token) -> LiteralValue {
-        self.values
-            .get(&token.lexeme)
-            .unwrap_or_else(|| panic!("Variable {} is not defined", token.lexeme))
-            .clone()
+    pub fn get(&self, name: &str) -> LiteralValue {
+        match self.values.get(name) {
+            Some(value) => value.clone(),
+            None => {
+                if let Some(enclosed_env) = &self.enclosing {
+                    enclosed_env.get(name)
+                } else {
+                    panic!("Variable {} is not defined", name)
+                }
+            }
+        }
     }
+}
+
+#[test]
+fn test_define() {
+    let number_val = 3.14;
+    let expected_value = LiteralValue::Number(number_val);
+    let mut env = Environment::new(None);
+
+    env.define("pi", expected_value.clone());
+    assert_eq!(env.get("pi"), expected_value);
+}
+
+#[test]
+fn test_assign() {
+    let number_val = 3.147;
+    let expected_value = LiteralValue::Number(number_val);
+
+    let mut env = Environment::new(None);
+
+    env.define("pi", LiteralValue::Number(3.14));
+    env.assign("pi", expected_value.clone());
+
+    assert_eq!(env.get("pi"), expected_value);
+}
+
+#[test]
+fn test_define_enclosed_no_value() {
+    let number_val = 3.14;
+    let expected_value = LiteralValue::Number(number_val);
+    let enclosed_env = Box::new(Environment::new(None));
+
+    let mut env = Environment::new(Some(enclosed_env));
+
+    env.define("pi", expected_value.clone());
+    assert_eq!(env.get("pi"), expected_value);
+
+    let enclosed_env = env.enclosing.unwrap();
+
+    let enclosed_env_value = std::panic::catch_unwind(|| enclosed_env.get("pi"));
+    assert!(enclosed_env_value.is_err());
+}
+
+#[test]
+fn test_define_enclosed_with_shadowing() {
+    let shadowed_value = LiteralValue::Number(3.14);
+    let mut enclosed_env = Box::new(Environment::new(None));
+
+    enclosed_env.define("pi", shadowed_value.clone());
+
+    let new_value = LiteralValue::Number(10.0);
+
+    let mut env = Environment::new(Some(enclosed_env));
+    env.define("pi", new_value.clone());
+    assert_eq!(env.get("pi"), new_value);
+
+    let enclosed_env = env.enclosing.unwrap();
+    assert_eq!(enclosed_env.get("pi"), shadowed_value);
 }

@@ -104,7 +104,7 @@ impl Visitor<LiteralValue> for Interpreter {
     }
 
     fn visit_variable_expression(&mut self, name_token: &Token) -> LiteralValue {
-        self.environment.get(name_token)
+        self.environment.get(&name_token.lexeme)
     }
 
     fn visit_statement(&mut self, statement: &Statement) -> LiteralValue {
@@ -146,7 +146,7 @@ impl Visitor<LiteralValue> for Interpreter {
 impl Interpreter {
     pub fn new() -> Self {
         Self {
-            environment: Environment::new(),
+            environment: Environment::new(None),
         }
     }
 
