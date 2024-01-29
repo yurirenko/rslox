@@ -53,4 +53,5 @@ pub trait Visitor<R> {
 
     fn visit_statement(&mut self, statement: &Statement) -> R;
     fn visit_var_declaration_statement(&mut self, token: &Token, initializer: &Option<Expr>) -> R;
+    fn visit_block(&mut self, expressions: &Vec<Statement>) -> R;
 }

@@ -5,5 +5,6 @@ use crate::token::Token;
 pub enum Statement {
     Expression(Expr),
     Print(Expr),
+    Block(Vec<Statement>),
     Var(Token, Option<Expr>),
 }

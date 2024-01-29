@@ -1,6 +1,7 @@
 use crate::expression::LiteralValue;
 use std::collections::HashMap;
 
+#[derive(Clone)]
 pub struct Environment {
     enclosing: Option<Box<Environment>>,
     values: HashMap<String, LiteralValue>,

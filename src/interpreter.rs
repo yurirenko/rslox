@@ -107,6 +107,19 @@ impl Visitor<LiteralValue> for Interpreter {
         self.environment.get(&name_token.lexeme)
     }
 
+    fn visit_block(&mut self, statements: &Vec<Statement>) -> LiteralValue {
+        let previous_env = self.environment.clone();
+
+        self.environment = Environment::new(Some(Box::new(self.environment.clone())));
+
+        for s in statements {
+            self.visit_statement(&s);
+        }
+        self.environment = previous_env;
+
+        LiteralValue::Nil
+    }
+
     fn visit_statement(&mut self, statement: &Statement) -> LiteralValue {
         match statement {
             Statement::Expression(expr) => self.visit_expression(expr),
@@ -118,6 +131,7 @@ impl Visitor<LiteralValue> for Interpreter {
             Statement::Var(token, initializer) => {
                 self.visit_var_declaration_statement(token, initializer)
             }
+            Statement::Block(statements) => self.visit_block(statements),
         }
     }
 

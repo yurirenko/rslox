@@ -96,6 +96,23 @@ impl<'a> Parser<'a> {
                         panic!("Missing expression!");
                     }
                 }
+                TokenType::LeftBrace => {
+                    let mut statements = Vec::new();
+                    self.advance();
+
+                    while let Some(token) = self.tokens.peek() {
+                        match token.token_type {
+                            TokenType::RightBrace => {
+                                self.advance();
+                                break;
+                            }
+                            _ => {
+                                statements.push(self.declaration());
+                            }
+                        }
+                    }
+                    Statement::Block(statements)
+                }
                 _ => {
                     let expr = self.expression();
 
@@ -131,7 +148,6 @@ impl<'a> Parser<'a> {
                 TokenType::Equal => {
                     self.advance();
 
-                    // let equals = self.prev_token.unwrap();
                     let value = self.assignment();
                     if let Expr::Variable(token) = expr {
                         expr = Expr::Assignment(token, Box::new(value));
@@ -498,6 +514,59 @@ fn test_var_declaration_with_initialization() {
         },
         Some(Expr::Literal(LiteralValue::String(String::from("hello!")))),
     )];
+
+    let mut parser = Parser::init(&tokens[..]);
+    assert_eq!(expected, parser.parse());
+}
+
+#[test]
+fn test_block_definition() {
+    let tokens = vec![
+        Token {
+            line: 1,
+            lexeme: String::from("{"),
+            token_type: TokenType::LeftBrace,
+        },
+        Token {
+            line: 1,
+            lexeme: String::from("var"),
+            token_type: TokenType::Var,
+        },
+        Token {
+            line: 1,
+            lexeme: String::from("greeting"),
+            token_type: TokenType::Identifier(String::from("greeting")),
+        },
+        Token {
+            line: 1,
+            lexeme: String::from("="),
+            token_type: TokenType::Equal,
+        },
+        Token {
+            line: 1,
+            lexeme: String::from("hello!"),
+            token_type: TokenType::StringLiteral(String::from("hello!")),
+        },
+        Token {
+            line: 1,
+            lexeme: String::from(";"),
+            token_type: TokenType::Semicolon,
+        },
+        Token {
+            line: 1,
+            lexeme: String::from("}"),
+            token_type: TokenType::RightBrace,
+        },
+    ];
+
+    let expected = vec![Statement::Block(vec![Statement::Var(
+        Token {
+            line: 1,
+            lexeme: String::from("greeting"),
+            token_type: TokenType::Identifier(String::from("greeting")),
+        },
+        Some(Expr::Literal(LiteralValue::String(String::from("hello!")))),
+    )])];
 
     let mut parser = Parser::init(&tokens[..]);
     assert_eq!(expected, parser.parse());
